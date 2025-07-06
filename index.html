@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omega - AI Text Summarizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="logoimg.png" type="image/png">
+    <script src="https://unpkg.com/phosphor-icons@1.4.2/src/index.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #070201;
+            --secondary-bg: #88350f;
+            --accent-color:  #06c7f2;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --glass-bg: rgba(87, 56, 28, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --gradient-primary: linear-gradient(135deg, #ec8743 0%, #eb4817 100%);
+            --gradient-secondary: linear-gradient(135deg, #f14932 0%, #f5576c 100%);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            padding: 2rem 0;
+        }
+
+        .navbar.scrolled {
+            backdrop-filter: blur(20px);
+            background: rgba(10, 10, 15, 0.8);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        #navbutton{
+            background:none ;
+            color: #ffffff;
+            padding: 8px;
+            width: 120px;
+            font-weight: 300;
+            border-radius: 15px;
+            border-color: #06c7f2;
+            height: 35px;
+        }
+        #navbutton:hover{
+            background: rgba(1, 225, 255, 0.95);
+            opacity: 1;
+            transition: 0.3s ease;
+            width: 130px;
+            height: 50px;
+            cursor: pointer;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #06c7f2;
+            text-decoration: none;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 300;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .burger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 4px;
+        }
+
+        .burger span {
+            width: 25px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: 0.3s;
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            height: 100vh;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(20px);
+            transition: right 0.3s ease;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-menu a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(73, 43, 24, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 16rem 0 4rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s ease forwards;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+        }
+        
+        .hero h1 span{
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            color: #06c7f2;
+        }
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            font-weight: 300;
+        }
+
+        .product-ui {
+            margin-top: 3rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.3s forwards;
+        }
+        .product-ui .hiky{
+            height:400px;
+            width: 20px;
+        }
+
+        .product-ui img {
+            width: 100%;
+            max-width: 1000px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Section Animations */
+        .section {
+            opacity: 1;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Featured In */
+        .featured-in {
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .featured-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        .featured-logo {
+            opacity: 1;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: opacity 0.3s ease;
+        }
+        
+
+        .featured-logo:hover {
+            transition: opacity 0.5s ease;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 4rem 0;
+        }
+
+        .testimonial-carousel {
+            display: flex;
+            gap: 2rem;
+            overflow-x: auto;
+            padding: 2rem 0;
+            scroll-behavior: smooth;
+        }
+
+        .testimonial-card {
+            min-width: 350px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .testimonial-result {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 4rem 0;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .step-card {
+            text-align: center;
+        }
+
+        .step-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        /* Features */
+        .features {
+            padding: 4rem 0;
+        }
+
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            text-align: center;
+        }
+
+        .feature-icon {
+            margin-bottom: 1rem;
+        }
+
+        /* Mission */
+        .mission {
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .mission-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Pricing */
+        .pricing {
+            padding: 4rem 0;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .pricing-card {
+            position: relative;
+            text-align: center;
+        }
+
+        .pricing-card.recommended::before {
+            content: 'Recommended';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-color);
+            color: white;
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .pricing-card .price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin: 2rem 0;
+        }
+
+        .pricing-features li {
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+        }
+
+        .pricing-features li::before {
+            content: '✓';
+            color: var(--accent-color);
+            margin-right: 0.5rem;
+        }
+
+        /* FAQ */
+        .faq {
+            padding: 4rem 0;
+        }
+
+        .faq-item {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem 1.5rem;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 4rem 0 2rem;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .footer p {
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 300;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .burger {
+                display: flex;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .steps-grid,
+            .features-grid,
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .testimonial-carousel {
+                flex-direction: column;
+            }
+
+            .testimonial-card {
+                min-width: auto;
+            }
+        }
+
+        /* Summarizer Page Styles */
+        .summarizer-page {
+            display: none;
+            padding: 6rem 0 4rem;
+        }
+
+        .summarizer-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .summarizer-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem;
+            backdrop-filter: blur(20px);
+        }
+
+        .input-group {
+            margin-bottom: 2rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .text-input {
+            width: 100%;
+            min-height: 200px;
+            padding: 1rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .slider-group {
+            flex: 1;
+        }
+
+        .slider {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--glass-border);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+        }
+
+        .output-section {
+            margin-top: 2rem;
+        }
+
+        .output-text {
+            width: 100%;
+            min-height: 150px;
+            padding: 1rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .back-btn {
+            margin-bottom: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 300;
+            transition: color 0.3s ease;
+        }
+
+        .back-btn:hover {
+            color: var(--text-primary);
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-content">
+            <a href="#home" class="logo">Ω Omega</a>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#testimonials">Testimonials</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#faq">FAQ</a></li>
+            </ul>
+            <button id="navbutton">LOG IN</button>
+            <button id="navbutton">SIGN UP</button>
+            <div class="burger" id="burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobile-menu">
+        <a href="#home">Home</a>
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#testimonials">Testimonials</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+    </div>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Hero Section -->
+         
+        <section class="hero" id="home">
+            <div class="container"> 
+                <div class="hero-content">
+                    <h1><span>Summarize</span> Any text with AI precision </h1>
+                    <p>Transform lengthy documents into concise, meaningful summaries in seconds. Powered by advanced AI technology for professionals, students, and researchers.</p>
+                    <a href="#" class="btn btn-primary" id="get-started-btn">
+                        <i class="ph ph-rocket-launch"></i>
+                        Get Started
+                    </a>
+                </div>
+                <div class="product-ui">
+                    <iframe src='https://my.spline.design/worldplanetdarkred-x7rdEEhzHKrVyAu2axYJ2gwn/' frameborder='0' width='550px' height='550px' id="hiky"></iframe>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured In -->
+        <section class="featured-in section" id="featured-in">
+            <div class="container">
+                <h3 style="text-align: center; color: #00b9f1; margin-bottom: 4rem; font-weight: 1000; font-size: 45px;">Featured In</h3>
+                <div class="featured-logos">
+                    <div class="featured-logo"><img src="tc.png" width="150px" height="150px"></div>
+                    <div class="featured-logo"><img src="i1.jpg" width="200px" height="150px"></div>
+                    <div class="featured-logo"><img src="i2.jpg" width="200px" height="150px"></div>
+                    <div class="featured-logo"><img src="i3.jpg" width="200px" height="150px"></div>
+                    <div class="featured-logo"><img src="i4.png" width="150px" height="150px"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials -->
+        <section class="testimonials section" id="testimonials">
+            <div class="container">
+                <h2 class="section-title">What Our Users Say</h2>
+                <p class="section-subtitle">See how Omega is transforming the way people process information</p>
+                <div class="testimonial-carousel">
+                    <div class="testimonial-card">
+                        <p class="testimonial-text">"Omega reduced my research time by 70%. I can now process 10x more papers in the same amount of time."</p>
+                        <div class="testimonial-author">Dr. Sarah Chen</div>
+                        <div class="testimonial-result">Saved 15 hours/week</div>
+                    </div>
+                    <div class="testimonial-card">
+                        <p class="testimonial-text">"As a legal professional, Omega helps me quickly extract key points from lengthy contracts and documents."</p>
+                        <div class="testimonial-author">Michael Rodriguez</div>
+                        <div class="testimonial-result">Increased productivity by 85%</div>
+                    </div>
+                    <div class="testimonial-card">
+                        <p class="testimonial-text">"The AI summaries are incredibly accurate. It's like having a research assistant that never sleeps."</p>
+                        <div class="testimonial-author">Emily Watson</div>
+                        <div class="testimonial-result">Processed 200+ documents daily</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="how-it-works section" id="how-it-works">
+            <div class="container">
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-subtitle">Get started with Omega in three simple steps</p>
+                <div class="steps-grid">
+                    <div class="step-card glass-card">
+                        <div class="step-icon">
+                            <i class="ph ph-wallet"></i>
+                        </div>
+                        <h3>Connect Your Account</h3>
+                        <p style="color: var(--text-secondary); font-weight: 300;">Sign up with your email and connect your preferred workspace integration.</p>
+                    </div>
+                    <div class="step-card glass-card">
+                        <div class="step-icon">
+                            <i class="ph ph-robot"></i>
+                        </div>
+                        <h3>Set Up Your AI Assistant</h3>
+                        <p style="color: var(--text-secondary); font-weight: 300;">Customize your AI preferences and summary length settings.</p>
+                    </div>
+                    <div class="step-card glass-card">
+                        <div class="step-icon">
+                            <i class="ph ph-magic-wand"></i>
+                        </div>
+                        <h3>Automate Your Summarizing</h3>
+                        <p style="color: var(--text-secondary); font-weight: 300;">Upload documents and get intelligent summaries in seconds.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features section" id="features">
+            <div class="container">
+                <h2 class="section-title">Powerful Features</h2>
+                <p class="section-subtitle">Everything you need to transform how you process information</p>
+                <div class="features-grid">
+                    <div class="feature-card glass-card">
+                        <div class="feature-icon">
+                            <i class="ph ph-lightning"></i>
+                        </div>
+                        <h3>Lightning Fast</h3>
+                        <p style="color: var(--text-secondary); font-weight: 300;">Process documents in under 3 seconds with our optimized AI engine.</p>
+                    </div>
+                    <div class="feature-card glass-card">
+                        <div class="feature-icon">
+                            <i class="ph ph-brain"></i>
+                        </div>
+                        <h3>AI-Powered</h3>
+                        <p style="color: var(--text-secondary); font-weight: 300;">Advanced natural language processing for accurate summaries.</p>
+                    </div>
+                    <div class="feature-card glass-card">
+                        <div class="feature-icon">
+                            <i class="ph ph-shield-check"></i>
+                        </div>
+                        <h3>Secure & Private</h3>
+                        <p style="color: var(--text-secondary); font-weight: 300;">Your documents are encrypted and never stored on our servers.</p>
+                    </div>
+                    <div class="feature-card glass-card">
+                        <div class="feature-icon">
+                            <i class="ph ph-device-mobile"></i>
+                        </div>
+                        <h3>Cross-Platform</h3>
+                        <p style="color: var(--text-secondary); font-weight: 300;">Works seamlessly across all your devices and platforms.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mission -->
+        <section class="mission section" id="mission">
+            <div class="container">
+                <div class="mission-content">
+                    <h2 class="section-title">Our Mission</h2>
+                    <p style="font-size: 1.25rem; color: var(--text-secondary); font-weight: 300; line-height: 1.8;">
+                        We believe that information should be accessible and digestible for everyone. In an age of information overload, Omega was built to help professionals, students, and researchers focus on what matters most. Our AI doesn't just summarize—it understands context, preserves meaning, and delivers insights that drive action.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing -->
+        <section class="pricing section" id="pricing">
+            <div class="container">
+                <h2 class="section-title">Choose Your Plan</h2>
+                <p class="section-subtitle">Flexible pricing for individuals and teams</p>
+                <div class="pricing-grid">
+                    <div class="pricing-card glass-card">
+                        <h3>Free</h3>
+                        <div class="price">$0<span style="font-size: 1rem; color: var(--text-secondary);">/month</span></div>
+                        <p style="color: var(--text-secondary); font-weight: 300;">Perfect for getting started</p>
+                        <ul class="pricing-features">
+                            <li>10 summaries per month</li>
+                            <li>Basic AI processing</li>
+                            <li>Email support</li>
+                            <li>Web app access</li>
+                        </ul>
+                        <a href="#" class="btn btn-secondary">Get Started</a>
+                    </div>
+                    <div class="pricing-card glass-card recommended">
+                        <h3>Pro</h3>
+                        <div class="price">$29<span style="font-size: 1rem; color: var(--text-secondary);">/month</span></div>
+                        <p style="color: var(--text-secondary); font-weight: 300;">For power users and professionals</p>
+                        <ul class="pricing-features">
+                            <li>Unlimited summaries</li>
+                            <li>Advanced AI processing</li>
+                            <li>Priority support</li>
+                            <li>API access</li>
+                            <li>Custom summary lengths</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary">Start Free Trial</a>
+                    </div>
+                    <div class="pricing-card glass-card">
+                        <h3>Team</h3>
+                        <div class="price">$99<span style="font-size: 1rem; color: var(--text-secondary);">/month</span></div>
+                        <p style="color: var(--text-secondary); font-weight: 300;">For teams and organizations</p>
+                        <ul class="pricing-features">
+                            <li>Everything in Pro</li>
+                            <li>Team collaboration</li>
+                            <li>Admin dashboard</li>
+                            <li>SSO integration</li>
+                            <li>Custom AI models</li>
+                        </ul>
+                        <a href="#" class="btn btn-secondary">Contact Sales</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="faq section" id="faq">
+            <div class="container">
+                <h2 class="section-title">Frequently Asked Questions</h2>
+                <div style="max-width: 800px; margin: 3rem auto 0;">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>How accurate are the AI summaries?</span>
+                            <i class="ph ph-plus"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Our AI achieves 95% accuracy in preserving key information and context. We continuously train our models on diverse datasets to improve performance.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>What file formats does Omega support?</span>
+                            <i class="ph ph-plus"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Omega supports PDF, DOCX, TXT, RTF, and HTML files. We're constantly adding support for more formats based on user feedback.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>Is my data secure?</span>
+                            <i class="ph ph-plus"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, all documents are encrypted in transit and at rest. We don't store your documents after processing, and our servers are SOC 2 certified.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>Can I customize the summary length?</span>
+                            <i class="ph ph-plus"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Absolutely! You can set custom word counts, choose bullet points vs. paragraphs, and adjust the level of detail in your summaries.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>Do you offer API access?</span>
+                            <i class="ph ph-plus"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, our Pro and Team plans include full API access with comprehensive documentation and SDKs for popular programming languages.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer section" id="footer">
+            <div class="container">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; margin-bottom: 3rem; text-align: left;">
+                    <div>
+                        <div class="logo" style="font-size: 1.5rem; margin-bottom: 1rem; display: block;">Ω Omega</div>
+                        <p style="color: var(--text-secondary); font-weight: 300; line-height: 1.6;">
+                            Transform the way you process information with AI-powered text summarization.
+                        </p>
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                            <a href="#" style="color: var(--text-secondary); font-size: 1.5rem; transition: color 0.3s ease;">
+                                <i class="ph ph-twitter-logo"></i>
+                            </a>
+                            <a href="#" style="color: var(--text-secondary); font-size: 1.5rem; transition: color 0.3s ease;">
+                                <i class="ph ph-linkedin-logo"></i>
+                            </a>
+                            <a href="#" style="color: var(--text-secondary); font-size: 1.5rem; transition: color 0.3s ease;">
+                                <i class="ph ph-github-logo"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--text-primary); margin-bottom: 1rem; font-weight: 600;">Product</h4>
+                        <ul style="list-style: none; line-height: 2;">
+                            <li><a href="#features" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">Features</a></li>
+                            <li><a href="#pricing" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">Pricing</a></li>
+                            <li><a href="#" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">API</a></li>
+                            <li><a href="#" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">Integrations</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--text-primary); margin-bottom: 1rem; font-weight: 600;">Company</h4>
+                        <ul style="list-style: none; line-height: 2;">
+                            <li><a href="#" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">About</a></li>
+                            <li><a href="#" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">Blog</a></li>
+                            <li><a href="#" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">Careers</a></li>
+                            <li><a href="#" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--text-primary); margin-bottom: 1rem; font-weight: 600;">Support</h4>
+                        <ul style="list-style: none; line-height: 2;">
+                            <li><a href="#" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">Help Center</a></li>
+                            <li><a href="#" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">Documentation</a></li>
+                            <li><a href="#" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">Status</a></li>
+                            <li><a href="#" style="color: var(--text-secondary); text-decoration: none; font-weight: 300;">Contact Support</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid var(--glass-border); padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <p style="color: var(--text-muted); font-weight: 300;">© 2025 Omega AI. All rights reserved.</p>
+                    <div style="display: flex; gap: 2rem;">
+                        <a href="#" style="color: var(--text-muted); text-decoration: none; font-weight: 300;">Privacy Policy</a>
+                        <a href="#" style="color: var(--text-muted); text-decoration: none; font-weight: 300;">Terms of Service</a>
+                        <a href="#" style="color: var(--text-muted); text-decoration: none; font-weight: 300;">Cookie Policy</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Summarizer Page -->
+    <div class="summarizer-page" id="summarizer-page">
+        <div class="container">
+            <div class="summarizer-container">
+                <a href="#" class="back-btn" id="back-btn">
+                    <i class="ph ph-arrow-left"></i>
+                    Back to Home
+                </a>
+                <div class="summarizer-card">
+                    <h1 style="text-align: center; margin-bottom: 2rem; font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em;">
+                        AI Text Summarizer
+                    </h1>
+                    <div class="input-group">
+                        <label for="input-text">Enter your text to summarize:</label>
+                        <textarea 
+                            id="input-text" 
+                            class="text-input" 
+                            placeholder="Paste your text here... (minimum 100 characters)"
+                        ></textarea>
+                    </div>
+                    <div class="controls">
+                        <div class="slider-group">
+                            <label for="word-count">Summary Length: <span id="word-count-display">150</span> words</label>
+                            <input 
+                                type="range" 
+                                id="word-count" 
+                                class="slider" 
+                                min="50" 
+                                max="500" 
+                                value="150"
+                            >
+                        </div>
+                        <button class="btn btn-primary" id="summarize-btn">
+                            <i class="ph ph-magic-wand"></i>
+                            Summarize
+                        </button>
+                    </div>
+                    <div class="output-section">
+                        <label for="output-text">Summary:</label>
+                        <textarea 
+                            id="output-text" 
+                            class="output-text" 
+                            placeholder="Your AI-generated summary will appear here..."
+                            readonly
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Mobile menu toggle
+        const burger = document.getElementById('burger');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        burger.addEventListener('click', () => {
+            mobileMenu.classList.toggle('active');
+        });
+
+        // Close mobile menu when clicking a link
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+            });
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // FAQ accordion
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const faqItem = question.parentElement;
+                const isActive = faqItem.classList.contains('active');
+                
+                // Close all FAQ items
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Open clicked item if it wasn't active
+                if (!isActive) {
+                    faqItem.classList.add('active');
+                }
+            });
+        });
+
+        // Get Started button functionality
+        document.getElementById('get-started-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('summarizer-page').style.display = 'block';
+            window.scrollTo(0, 0);
+        });
+
+        // Back button functionality
+        document.getElementById('back-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('summarizer-page').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            window.scrollTo(0, 0);
+        });
+
+        // Summarizer functionality
+        const wordCountSlider = document.getElementById('word-count');
+        const wordCountDisplay = document.getElementById('word-count-display');
+        const inputText = document.getElementById('input-text');
+        const outputText = document.getElementById('output-text');
+        const summarizeBtn = document.getElementById('summarize-btn');
+
+        wordCountSlider.addEventListener('input', (e) => {
+            wordCountDisplay.textContent = e.target.value;
+        });
+
+        summarizeBtn.addEventListener('click', () => {
+            const text = inputText.value.trim();
+            const wordCount = parseInt(wordCountSlider.value);
+            
+            if (text.length < 100) {
+                alert('Please enter at least 100 characters to summarize.');
+                return;
+            }
+
+            // Show loading state
+            summarizeBtn.innerHTML = '<i class="ph ph-spinner"></i> Summarizing...';
+            summarizeBtn.disabled = true;
+
+            // Simulate AI processing
+            setTimeout(() => {
+                const summary = generateSummary(text, wordCount);
+                outputText.value = summary;
+                
+                // Reset button
+                summarizeBtn.innerHTML = '<i class="ph ph-magic-wand"></i> Summarize';
+                summarizeBtn.disabled = false;
+            }, 2000);
+        });
+
+        // Simple summary generation (placeholder for actual AI)
+        function generateSummary(text, targetWords) {
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            const importantSentences = sentences.filter((sentence, index) => {
+                // Simple heuristic: take first few sentences and some from middle/end
+                return index < 2 || index > sentences.length - 3 || sentence.length > 100;
+            });
+            
+            let summary = importantSentences.slice(0, Math.ceil(targetWords / 25)).join('. ');
+            
+            // Trim to approximate word count
+            const words = summary.split(' ');
+            if (words.length > targetWords) {
+                summary = words.slice(0, targetWords).join(' ') + '...';
+            }
+            
+            return summary || "Summary generated successfully. This is a demonstration of the AI text summarization capability.";
+        }
+
+        // Add hover effects to social media links
+        document.querySelectorAll('.footer a').forEach(link => {
+            link.addEventListener('mouseenter', (e) => {
+                e.target.style.color = 'var(--accent-color)';
+            });
+            link.addEventListener('mouseleave', (e) => {
+                e.target.style.color = 'var(--text-secondary)';
+            });
+        });
+    </script>
+</body>
+</html>
